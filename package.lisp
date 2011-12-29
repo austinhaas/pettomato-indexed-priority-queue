@@ -1,6 +1,8 @@
 (defpackage #:priority-queue
   (:use #:cl)
   (:export
+   #:empty-queue-error
+   #:item-not-found-error
    #:make-empty-queue
    #:queue-empty-p
    #:queue-peek

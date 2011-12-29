@@ -1,5 +1,15 @@
 (in-package #:priority-queue)
 
+;;;; Conditions
+
+(define-condition empty-queue-error (error)
+  ()
+  (:documentation "Signaled when queue-peek or queue-pop is called on an empty queue."))
+
+(define-condition item-not-found-error (error)
+  ()
+  (:documentation "Signaled when an operation depends on an item that was not found in the queue."))
+
 (defstruct q
   (compare-fn nil :type function)
   (item-index nil :type hash-table)
@@ -28,12 +38,18 @@ using this function."
   (= (length (q-elements q)) 0))
 
 (defun queue-peek (q)
-  "Return the element at the front of the queue."
-  (aref (q-elements q) 0))
+  "Return the element at the front of the queue. Signals
+empty-queue-error if the queue is empty."
+  (if (queue-empty-p q)
+      (error 'empty-queue-error)
+      (aref (q-elements q) 0)))
 
 (defun queue-pop (q)
-  "Remove the element from the front of the queue and return it."
-  (heap-extract-min (q-elements q) (q-item-index q) (q-compare-fn q)))
+  "Remove the element from the front of the queue and return
+it. Signals empty-queue-error if the queue is empty."
+  (if (queue-empty-p q)
+      (error 'empty-queue-error)
+      (heap-extract-min (q-elements q) (q-item-index q) (q-compare-fn q))))
 
 (defun queue-insert (q item)
   "Insert the item by priority according to the compare
@@ -45,12 +61,14 @@ function. Returns the queue."
   "Replace old with new in the queue. This is analogous to deleting
 the old item and inserting the new one, but it is almost always more
 efficient (and never less efficient) because we can just fix up the
-heap from the position of the swapped item. Returns the queue."
+heap from the position of the swapped item. Returns the queue. Signals
+item-not-found-error if the old item wasn't found."
   (let* ((hash (q-item-index q))
          (compare-fn (q-compare-fn q))
          (elements (q-elements q))
          (index (gethash old hash)))
-    (assert (remhash old hash) nil "Tried to replace an item, but it wasn't found in the hash.")
+    (unless (remhash old hash)
+      (error 'item-not-found-error))
     (setf (gethash new hash) index)
     (setf (aref elements index) new)
     (if (funcall compare-fn new old)
@@ -61,11 +79,14 @@ heap from the position of the swapped item. Returns the queue."
 (defun queue-update (q item)
   "queue-update makes sure that item is sorted correctly in q. Call
 queue-update after changing item in such a way that would affect its
-priority. Returns the queue."
+priority. Returns the queue. Signals item-not-found-error if the item
+wasn't found."
   (let ((compare-fn (q-compare-fn q))
         (elements (q-elements q))
         (hash (q-item-index q))
         (index (gethash item (q-item-index q))))
+    (unless index
+      (error 'item-not-found-error))
     (if (and (> index 0)
              (funcall compare-fn item (aref elements (heap-parent index))))
         (heap-improve-key elements hash index compare-fn)
@@ -73,10 +94,12 @@ priority. Returns the queue."
   q)
 
 (defun queue-delete (q item)
-  "Delete item from the queue. Returns the queue."
+  "Delete item from the queue. Returns the queue. Signals
+item-not-found-error if the item wasn't found."
   (let* ((hash (q-item-index q))
          (index (gethash item hash)))
-    (assert index nil "index for item ~A not found in hash" item)
+    (unless index
+      (error 'item-not-found-error))
     (heap-delete (q-elements q) hash index (q-compare-fn q)))
   q)
 
