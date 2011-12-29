@@ -1,8 +1,5 @@
 (in-package #:priority-queue)
 
-;; For queue-replace to work, the items stored in the queue must be
-;; unique when tested by 'eql.
-
 (defstruct q
   (compare-fn nil :type function)
   (item-index nil :type hash-table)
@@ -39,14 +36,16 @@ using this function."
   (heap-extract-min (q-elements q) (q-item-index q) (q-compare-fn q)))
 
 (defun queue-insert (q item)
-  "Insert the item by priority according to the compare function."
-  (heap-insert (q-elements q) (q-item-index q) item (q-compare-fn q)))
+  "Insert the item by priority according to the compare
+function. Returns the queue."
+  (heap-insert (q-elements q) (q-item-index q) item (q-compare-fn q))
+  q)
 
 (defun queue-replace (q old new)
   "Replace old with new in the queue. This is analogous to deleting
 the old item and inserting the new one, but it is almost always more
 efficient (and never less efficient) because we can just fix up the
-heap from the position of the swapped item."
+heap from the position of the swapped item. Returns the queue."
   (let* ((hash (q-item-index q))
          (compare-fn (q-compare-fn q))
          (elements (q-elements q))
@@ -56,12 +55,13 @@ heap from the position of the swapped item."
     (setf (aref elements index) new)
     (if (funcall compare-fn new old)
         (heap-improve-key elements hash index compare-fn)
-        (heapify elements hash index compare-fn))))
+        (heapify elements hash index compare-fn)))
+  q)
 
 (defun queue-update (q item)
   "queue-update makes sure that item is sorted correctly in q. Call
 queue-update after changing item in such a way that would affect its
-priority."
+priority. Returns the queue."
   (let ((compare-fn (q-compare-fn q))
         (elements (q-elements q))
         (hash (q-item-index q))
@@ -69,13 +69,16 @@ priority."
     (if (and (> index 0)
              (funcall compare-fn item (aref elements (heap-parent index))))
         (heap-improve-key elements hash index compare-fn)
-        (heapify elements hash index compare-fn))))
+        (heapify elements hash index compare-fn)))
+  q)
 
 (defun queue-delete (q item)
+  "Delete item from the queue. Returns the queue."
   (let* ((hash (q-item-index q))
          (index (gethash item hash)))
     (assert index nil "index for item ~A not found in hash" item)
-    (heap-delete (q-elements q) hash index (q-compare-fn q))))
+    (heap-delete (q-elements q) hash index (q-compare-fn q)))
+  q)
 
 ;;;; The Heap Implementation of Priority Queues
 
