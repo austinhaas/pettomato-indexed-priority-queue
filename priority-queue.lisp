@@ -175,8 +175,11 @@ belongs. [Page 130 CL&R 2nd ed.]."
            ;; after is positioned last in the heap.
            (decf (fill-pointer heap)))
           (t
-           (let ((last (aref heap (1- (length heap)))))
+           (let ((last (aref heap (1- L))))
              (setf (aref heap i) last)
-             (funcall set-index-fn last i))
-           (decf (fill-pointer heap))
-           (heapify heap i compare-fn set-index-fn)))))
+             (funcall set-index-fn last i)
+             (decf (fill-pointer heap))
+             (if (and (> i 0)
+                      (funcall compare-fn last (aref heap (heap-parent i))))
+                 (heap-improve-key heap i compare-fn set-index-fn)
+                 (heapify heap i compare-fn set-index-fn)))))))
