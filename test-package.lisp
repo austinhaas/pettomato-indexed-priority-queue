@@ -3,4 +3,5 @@
         #:fiveam
         #:priority-queue)
   (:export
-   :run-tests))
+   :run-tests
+   :repeat-tests))
