@@ -69,6 +69,8 @@ item-not-found-error if the old item wasn't found."
         (items (q-items q))
         (index (funcall (q-get-index-fn q) old))
         (set-index-fn (q-set-index-fn q)))
+    (unless index
+      (error 'item-not-found-error))
     (funcall set-index-fn new index)
     (setf (aref items index) new)
     (if (funcall compare-fn new old)
