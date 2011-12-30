@@ -51,7 +51,9 @@ empty-queue-error if the queue is empty."
 it. Signals empty-queue-error if the queue is empty."
   (if (queue-empty-p q)
       (error 'empty-queue-error)
-      (heap-extract-min (q-items q) (q-compare-fn q) (q-set-index-fn q))))
+      (let ((min (heap-extract-min (q-items q) (q-compare-fn q) (q-set-index-fn q))))
+        (funcall (q-set-index-fn q) min nil)
+        min)))
 
 (defun queue-insert (q item)
   "Insert the item by priority according to the compare
@@ -71,6 +73,7 @@ item-not-found-error if the old item wasn't found."
         (set-index-fn (q-set-index-fn q)))
     (unless index
       (error 'item-not-found-error))
+    (funcall set-index-fn old nil)
     (funcall set-index-fn new index)
     (setf (aref items index) new)
     (if (funcall compare-fn new old)
@@ -101,6 +104,7 @@ item-not-found-error if the item wasn't found."
     (unless index
       (error 'item-not-found-error))
     (heap-delete (q-items q) index (q-compare-fn q) (q-set-index-fn q)))
+    (funcall (q-set-index-fn q) item nil)
   q)
 
 ;;;; The Heap Implementation of Priority Queues
