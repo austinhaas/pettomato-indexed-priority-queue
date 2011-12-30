@@ -123,20 +123,24 @@ item-not-found-error if the item wasn't found."
 worse than its children. If it is, move heap[i] down where it
 belongs. [Page 130 CL&R 2nd ed.]."
   (declare (array heap) (fixnum i) (function compare-fn) (function set-index-fn))
-  (let ((l (heap-left i))
-        (r (heap-right i))
-        (N (length heap))
-        (best i))
-    (declare (fixnum l r n best))
-    (when (and (< l N)
-               (funcall compare-fn (aref heap l) (aref heap i)))
-      (setf best l))
-    (when (and (< r N)
-               (funcall compare-fn (aref heap r) (aref heap best)))
-      (setf best r))
-    (when (/= best i)
-      (exchange heap i best set-index-fn)
-      (heapify heap best compare-fn set-index-fn))))
+  (loop with N = (length heap)
+        with item = (aref heap i)
+        for l = (heap-left i)
+        for r = (heap-right i)
+        for best = i
+        do (when (and (< l N)
+                      (funcall compare-fn (aref heap l) (aref heap i)))
+             (setf best l))
+           (when (and (< r N)
+                      (funcall compare-fn (aref heap r) (aref heap best)))
+             (setf best r))
+           (cond ((/= best i)
+                  (rotatef (aref heap i) (aref heap best))
+                  (funcall set-index-fn (aref heap i) i)
+                  (setf i best))
+                 (t
+                  (funcall set-index-fn item i)
+                  (return)))))
 
 (defun heap-extract-min (heap compare-fn set-index-fn)
   "Pop the best (lowest valued) item off the heap. [Page 139 CL&R 2nd ed.]."
