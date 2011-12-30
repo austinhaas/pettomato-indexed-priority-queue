@@ -100,6 +100,8 @@ wasn't found."
 (defun queue-delete (q item)
   "Delete item from the queue. Returns the queue. Signals
 item-not-found-error if the item wasn't found."
+  (when (queue-empty-p q)
+    (error 'empty-queue-error))
   (let ((index (funcall (q-get-index-fn q) item)))
     (unless index
       (error 'item-not-found-error))
