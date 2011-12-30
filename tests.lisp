@@ -9,9 +9,15 @@
 
 (in-suite basic-suite)
 
+(defun make-queue (compare-fn)
+  (let ((hash (make-hash-table :test 'eql)))
+    (make-empty-queue compare-fn
+                      (lambda (item index) (setf (gethash item hash) index))
+                      (lambda (item) (gethash item hash)))))
+
 (test basic
-  (finishes (make-empty-queue #'<))
-  (let ((q (make-empty-queue #'<)))
+  (finishes (make-queue #'<))
+  (let ((q (make-queue #'<)))
     (is (queue-empty-p q))
     (signals empty-queue-error (queue-pop q))
     (signals empty-queue-error (queue-peek q))
@@ -25,7 +31,7 @@
 (defparameter *test-queue-size* 10)
 
 (test delete
-  (let ((q (make-empty-queue (lambda (a b) (< (second a) (second b)))))
+  (let ((q (make-queue (lambda (a b) (< (second a) (second b)))))
         (items (loop for i from 0 below *test-queue-size* collecting (list i (random 999)))))
     (dolist (item items)
       (queue-insert q item))
@@ -39,7 +45,7 @@
         (is-false (mismatch queue control :key #'second))))))
 
 (test update
-  (let ((q (make-empty-queue (lambda (a b) (< (second a) (second b)))))
+  (let ((q (make-queue (lambda (a b) (< (second a) (second b)))))
         (items (loop for i from 0 below *test-queue-size* collecting (list i (random 999)))))
     (dolist (item items)
       (queue-insert q item))
@@ -53,7 +59,7 @@
        (is-false (mismatch queue control :key #'second))))))
 
 (test replace
-  (let ((q (make-empty-queue (lambda (a b) (< (second a) (second b)))))
+  (let ((q (make-queue (lambda (a b) (< (second a) (second b)))))
         (items (loop for i from 0 below *test-queue-size* collecting (list i (random 999)))))
     (dolist (item items)
       (queue-insert q item))
