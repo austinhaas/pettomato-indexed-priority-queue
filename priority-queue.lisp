@@ -155,7 +155,12 @@ belongs. [Page 130 CL&R 2nd ed.]."
   (declare (array heap) (function compare-fn) (function set-index-fn))
   (assert (> (length heap) 0) nil "heap underflow")
   (let ((min (aref heap 0)))
-    (heap-delete heap 0 compare-fn set-index-fn)
+    (funcall set-index-fn min nil)
+    (when (> (length heap) 1)
+      (setf (aref heap 0) (aref heap (1- (length heap))))
+      (funcall set-index-fn (aref heap 0) 0))
+    (decf (fill-pointer heap))
+    (heapify heap 0 compare-fn set-index-fn)
     min))
 
 (defun heap-improve-key (heap i compare-fn set-index-fn)
