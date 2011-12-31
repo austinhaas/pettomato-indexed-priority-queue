@@ -12,6 +12,12 @@
 
 ;;;; Basic Operations on Queues
 
+(defstruct q
+  (compare-fn nil :type function)
+  (set-index-fn nil :type function)
+  (get-index-fn nil :type function)
+  (items nil :type array))
+
 (defun make-empty-queue (compare-fn set-index-fn get-index-fn)
   "Return a new empty queue.
 
