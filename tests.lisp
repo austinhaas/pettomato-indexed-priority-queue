@@ -224,7 +224,7 @@
     (loop repeat 100 do
       (loop with items = nil
             with q = (make-queue (lambda (a b) (< (second a) (second b))))
-            for i from 0 below 999
+            for i from 0 below 9999
             for random-int = (if (= (length items) 0)
                                  0
                                  (random 100))
