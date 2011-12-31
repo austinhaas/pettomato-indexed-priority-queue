@@ -210,18 +210,63 @@
              ;; priority queue is not a stable sort.
              (let ((queue (loop while (not (queue-empty-p q)) collecting (queue-pop q)))
                    (control (sort items #'< :key #'second)))
-               (is-false (mismatch queue control :key #'second))))))))
+               (is-false (mismatch queue control :key #'second))))))
 
-(defun run-tests ()
-  (setf *last-random-state* (make-random-state nil))
-  (format t "~&random: ~A~%" (random 99999))
-  (run-test 'basic-suite))
-
-(defun repeat-tests ()
-  "Same as run-tests, but uses the last random seed from run-tests, so
-that we can reproduce bugs that might have appeared in random
-testing."
-  (let ((*random-state* (make-random-state *last-random-state*)))
-    (format t "~&random: ~A~%" (random 99999))
+(defun run-tests (&optional (random-seed (random 999999)))
+  (format t "~&random seed: ~A~%" random-seed)
+  (let ((*random-state* (sb-ext:seed-random-state random-seed)))
     (run-test 'basic-suite)))
 
+(defun run-profile (&optional (random-seed (random 999999)))
+  (format t "~&random seed: ~A~%" random-seed)
+  (let ((*random-state* (sb-ext:seed-random-state random-seed)))
+    (sb-profile:profile "PRIORITY-QUEUE")
+    (loop repeat 100 do
+      (loop with items = nil
+            with q = (make-queue (lambda (a b) (< (second a) (second b))))
+            for i from 0 below 999
+            for random-int = (if (= (length items) 0)
+                                 0
+                                 (random 100))
+            do (cond ((< random-int 30)
+                      ;; insert
+                      (let ((item (list i (random 999))))
+                        (push item items)
+                        (queue-insert q item)))
+                     ((< random-int 45)
+                      ;; pop
+                      (setf items (sort items #'< :key #'second))
+                      ;; There is a chance they aren't the same item,
+                      ;; but they have the same value. In order to keep
+                      ;; things consistent, we find the match in items
+                      ;; and delete it, rather than just popping the
+                      ;; first item off.
+                      (let ((item (queue-pop q)))
+                        (setf items (delete item items))))
+                     ((< random-int 60)
+                      ;; delete
+                      (let ((item (nth (random (length items)) items)))
+                        (setf items (delete item items))
+                        (queue-delete q item)))
+                     ((< random-int 80)
+                      ;; update
+                      (let ((item (nth (random (length items)) items)))
+                        (setf (second item) (random 999))
+                        (queue-update q item))
+                      )
+                     ((< random-int 100)
+                      ;; replace
+                      (let ((item (nth (random (length items)) items))
+                            (new (list i (random 999))))
+                        (queue-replace q item new)
+                        (setf items (nsubstitute new item items)))))
+            finally
+               ;; Note that we only compare the second value because the
+               ;; priority queue is not a stable sort.
+               (let ((queue (loop while (not (queue-empty-p q)) collecting (queue-pop q)))
+                     (control (sort items #'< :key #'second)))
+                 (when (mismatch queue control :key #'second)
+                     (error "Test failed.")))))
+    (sb-profile:report :print-no-call-list nil)
+    (sb-profile:reset)
+    (sb-profile:unprofile "PRIORITY-QUEUE")))

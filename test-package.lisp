@@ -4,4 +4,4 @@
         #:priority-queue)
   (:export
    :run-tests
-   :repeat-tests))
+   :run-profile))
