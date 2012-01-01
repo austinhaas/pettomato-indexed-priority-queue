@@ -12,13 +12,15 @@
 
 ;;;; Basic Operations on Queues
 
+(defconstant +not-in-queue+ -1)
+
 (defstruct q
   (compare-fn nil :type function)
   (set-index-fn nil :type function)
   (get-index-fn nil :type function)
   (items nil :type array))
 
-(defun make-empty-queue (compare-fn set-index-fn get-index-fn)
+(defun make-empty-queue (compare-fn set-index-fn get-index-fn &key (size 100) (element-type t))
   "Return a new empty queue.
 
 compare-fn is a function that takes two arguments and returns a true
@@ -39,7 +41,7 @@ index that was associated with it via set-index-fn.
   (make-q :compare-fn compare-fn
           :set-index-fn set-index-fn
           :get-index-fn get-index-fn
-          :items (make-heap)))
+          :items (make-array size :element-type element-type :fill-pointer 0 :adjustable t)))
 
 (defun queue-empty-p (q)
   "Are there no items in the queue?"
@@ -58,7 +60,7 @@ it. Signals empty-queue-error if the queue is empty."
   (if (queue-empty-p q)
       (error 'empty-queue-error)
       (let ((min (heap-extract-min (q-items q) (q-compare-fn q) (q-set-index-fn q))))
-        (funcall (q-set-index-fn q) min nil)
+        (funcall (q-set-index-fn q) min +not-in-queue+)
         min)))
 
 (defun queue-insert (q item)
@@ -77,9 +79,11 @@ item-not-found-error if the old item wasn't found."
         (items (q-items q))
         (index (funcall (q-get-index-fn q) old))
         (set-index-fn (q-set-index-fn q)))
-    (unless index
+    (declare (fixnum index))
+    (when (or (null index)
+              (= index +not-in-queue+))
       (error 'item-not-found-error))
-    (funcall set-index-fn old nil)
+    (funcall set-index-fn old +not-in-queue+)
     (funcall set-index-fn new index)
     (setf (aref items index) new)
     (if (funcall compare-fn new old)
@@ -95,7 +99,9 @@ wasn't found."
   (let ((compare-fn (q-compare-fn q))
         (items (q-items q))
         (index (funcall (q-get-index-fn q) item)))
-    (unless index
+    (declare (fixnum index))
+    (when (or (null index)
+              (= index +not-in-queue+))
       (error 'item-not-found-error))
     (if (and (> index 0)
              (funcall compare-fn item (aref items (heap-parent index))))
@@ -109,16 +115,15 @@ item-not-found-error if the item wasn't found."
   (when (queue-empty-p q)
     (error 'empty-queue-error))
   (let ((index (funcall (q-get-index-fn q) item)))
-    (unless index
+    (declare (fixnum index))
+    (when (or (null index)
+              (= index +not-in-queue+))
       (error 'item-not-found-error))
     (heap-delete (q-items q) index (q-compare-fn q) (q-set-index-fn q)))
-    (funcall (q-set-index-fn q) item nil)
+    (funcall (q-set-index-fn q) item +not-in-queue+)
   q)
 
 ;;;; The Heap Implementation of Priority Queues
-
-(defun make-heap (&optional (size 100))
-  (make-array size :fill-pointer 0 :adjustable t))
 
 (declaim (inline heap-parent))
 (defun heap-parent (i) (declare (fixnum i)) (floor (- i 1) 2))
@@ -128,6 +133,7 @@ item-not-found-error if the item wasn't found."
 (defun heap-right (i) (declare (fixnum i)) (the fixnum (+ 2 i i)))
 (declaim (inline exchange))
 (defun exchange (heap a b set-index-fn)
+  (declare (fixnum a b) (function set-index-fn))
   (rotatef (aref heap a) (aref heap b))
   (funcall set-index-fn (aref heap a) a)
   (funcall set-index-fn (aref heap b) b))
@@ -161,7 +167,7 @@ belongs. [Page 130 CL&R 2nd ed.]."
   (declare (array heap) (function compare-fn) (function set-index-fn))
   (assert (> (length heap) 0) nil "heap underflow")
   (let ((min (aref heap 0)))
-    (funcall set-index-fn min nil)
+    (funcall set-index-fn min +not-in-queue+)
     (when (> (length heap) 1)
       (setf (aref heap 0) (aref heap (1- (length heap))))
       (funcall set-index-fn (aref heap 0) 0))
