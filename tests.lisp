@@ -10,7 +10,7 @@
     (make-empty-queue compare-fn
                       (lambda (item index)
                         (setf (gethash item hash) index))
-                      (lambda (item) (gethash item hash)))))
+                      (lambda (item) (gethash item hash -1)))))
 
 (defparameter *test-queue-size* 40)
 (defparameter *last-random-state* nil)
