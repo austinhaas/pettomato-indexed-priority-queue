@@ -16,12 +16,6 @@
 (defun left (i) (declare (fixnum i)) (the fixnum (+ 1 i i)))
 (declaim (inline right))
 (defun right (i) (declare (fixnum i)) (the fixnum (+ 2 i i)))
-(declaim (inline exchange))
-(defun exchange (heap a b set-index-fn)
-  (declare (fixnum a b) (function set-index-fn))
-  (rotatef (aref heap a) (aref heap b))
-  (funcall set-index-fn (aref heap a) a)
-  (funcall set-index-fn (aref heap b) b))
 
 (defun heapify (heap i compare-fn set-index-fn)
   "Assume that the children of i are heaps, but that heap[i] may be
@@ -48,10 +42,16 @@ belongs. [Page 130 CL&R 2nd ed.]."
 (defun improve-key (heap i compare-fn set-index-fn)
   (declare (array heap) (fixnum i) (function compare-fn) (function set-index-fn))
   (let ((item (aref heap i)))
-    (loop while (and (> i 0)
-                     (funcall compare-fn item (aref heap (parent i))))
-          do (exchange heap i (parent i) set-index-fn)
-             (setf i (parent i)))))
+    (loop for index = i then parent-index
+          while (> index 0)
+          for parent-index = (parent index)
+          for parent = (aref heap parent-index)
+          while (funcall compare-fn item parent)
+          do
+             (funcall set-index-fn parent index)
+             (rotatef (aref heap index) (aref heap parent-index))
+          finally
+             (funcall set-index-fn item index))))
 
 (defstruct q
   (compare-fn nil :type function)
