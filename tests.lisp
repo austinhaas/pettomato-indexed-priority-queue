@@ -235,7 +235,6 @@
                         (queue-insert q item)))
                      ((< random-int 45)
                       ;; pop
-                      (setf items (sort items #'< :key #'second))
                       ;; There is a chance they aren't the same item,
                       ;; but they have the same value. In order to keep
                       ;; things consistent, we find the match in items
