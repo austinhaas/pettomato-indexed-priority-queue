@@ -27,15 +27,23 @@ belongs. [Page 130 CL&R 2nd ed.]."
         for l = (left i)
         for r = (right i)
         for best = i
-        do (when (and (< l N) (funcall compare-fn (aref heap l) (aref heap i)))
-             (setf best l))
-           (when (and (< r N) (funcall compare-fn (aref heap r) (aref heap best)))
-             (setf best r))
+        for best-item = item
+        do (when (< l N)
+             (let ((left-item (aref heap l)))
+               (when (funcall compare-fn left-item item)
+                 (setf best l
+                       best-item left-item))))
+           (when (< r N)
+             (let ((right-item (aref heap r)))
+               (when (funcall compare-fn right-item best-item)
+                 (setf best r
+                       best-item right-item))))
            (cond ((/= best i)
-                  (rotatef (aref heap i) (aref heap best))
-                  (funcall set-index-fn (aref heap i) i)
+                  (setf (aref heap i) best-item)
+                  (funcall set-index-fn best-item i)
                   (setf i best))
                  (t
+                  (setf (aref heap i) item)
                   (funcall set-index-fn item i)
                   (return)))))
 
@@ -48,9 +56,10 @@ belongs. [Page 130 CL&R 2nd ed.]."
           for parent = (aref heap parent-index)
           while (funcall compare-fn item parent)
           do
+             (setf (aref heap index) parent)
              (funcall set-index-fn parent index)
-             (rotatef (aref heap index) (aref heap parent-index))
           finally
+             (setf (aref heap index) item)
              (funcall set-index-fn item index))))
 
 (defstruct q
