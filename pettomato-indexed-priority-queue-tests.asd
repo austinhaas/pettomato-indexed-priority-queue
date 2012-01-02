@@ -1,6 +1,6 @@
-(asdf:defsystem #:priority-queue-tests
+(asdf:defsystem #:pettomato-indexed-priority-queue-tests
   :serial t
-  :depends-on (#:priority-queue
+  :depends-on (#:pettomato-indexed-priority-queue
                #:fiveam)
   :components ((:file "test-package")
                (:file "tests")))

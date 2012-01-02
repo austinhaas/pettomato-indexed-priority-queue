@@ -1,4 +1,4 @@
-(in-package #:priority-queue)
+(in-package #:pettomato-indexed-priority-queue)
 
 (defconstant +not-in-queue+ -1
   "A sentinel value associated with an item that is not in the queue.")
