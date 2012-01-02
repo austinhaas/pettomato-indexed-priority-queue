@@ -254,3 +254,14 @@ if the item wasn't found."
                     (heapify heap index compare-fn set-index-fn)))))))
     (funcall set-index-fn item +not-in-queue+))
   q)
+
+(defun queue-find (q item)
+  "Checks if item is in the queue (using the supplied
+get-index-fn). If it is, returns two values: the actual item from the
+queue (which could be different than the supplied item, since the
+client can setup the mapping however they like) and the index. If it
+isn't, returns nil and -1."
+  (let ((index (funcall (q-get-index-fn q) item)))
+    (if (= index +not-in-queue+)
+        (values nil -1)
+        (values (aref (q-items q) index) index))))

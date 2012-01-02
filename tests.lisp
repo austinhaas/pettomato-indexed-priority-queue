@@ -31,6 +31,8 @@
     (is (eq q (queue-insert q 4)))
     (is (eq q (queue-insert q 0)))
     (is-false (queue-empty-p q))
+    (is (equal '(3 4) (multiple-value-list (queue-find q 3))))
+    (is (equal '(nil -1) (multiple-value-list (queue-find q 5))))
     (is (= 0 (queue-peek q)))
     (is (= 0 (queue-pop q)))
     (is (= 1 (queue-pop q)))

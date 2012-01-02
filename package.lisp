@@ -10,4 +10,5 @@
    #:queue-insert
    #:queue-replace
    #:queue-delete
-   #:queue-update))
+   #:queue-update
+   #:queue-find))
