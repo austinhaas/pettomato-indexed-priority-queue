@@ -1,0 +1,23 @@
+* todo
+** supply initial values
+   - later we might want to allow adding several items at once; it
+     might be more efficient to merge two heaps than insert each item
+     one at a time.
+     - one use case for this is merging back in the bucket of scores
+       we left unsorted.
+** add more profile tests
+   - run tests with different sized heaps
+   - compare against other implementations
+     - pileup
+     - cl-heap
+   - simulate pathfinding
+     - pop best off and add 5 more with a score slightly higher
+     - this one should terminate after a set number of pops, since
+       search stops when it finds the goal
+   - simulate DES
+     - pop best off and add 0-2 more events sometime in the future
+** optimization: bucket for bad scores
+   - after the array reaches a certain size (say 1000 items), chop off
+     the last 500 items (the first will still be a heap) and store
+     them in a separate array. Keep track of the best score in the
+     bucket and decide if new items go into the bucket or the heap.
