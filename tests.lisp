@@ -1,4 +1,4 @@
-(in-package #:priority-queue-tests)
+(in-package #:pettomato-indexed-priority-queue-tests)
 
 (defun run-test (test-spec)
   "Same as run!, but adds an extra message."

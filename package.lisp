@@ -1,4 +1,5 @@
-(defpackage #:priority-queue
+(defpackage #:pettomato-indexed-priority-queue
+  (:nicknames #:pt-ipq)
   (:use #:cl)
   (:export
    #:empty-queue-error

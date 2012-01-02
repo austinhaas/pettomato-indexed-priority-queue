@@ -1,7 +1,7 @@
-(defpackage #:priority-queue-tests
+(defpackage #:pettomato-indexed-priority-queue-tests
   (:use #:cl
         #:fiveam
-        #:priority-queue)
+        #:pettomato-indexed-priority-queue)
   (:export
    :run-tests
    :run-profile))
