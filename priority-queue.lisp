@@ -1,10 +1,11 @@
 (in-package #:priority-queue)
 
-(defconstant +not-in-queue+ -1)
+(defconstant +not-in-queue+ -1
+  "A sentinel value associated with an item that is not in the queue.")
 
 (define-condition empty-queue-error (error)
   ()
-  (:documentation "Signaled when queue-peek or queue-pop is called on an empty queue."))
+  (:documentation "Signaled when an operation depends on a non-empty queue."))
 
 (define-condition item-not-found-error (error)
   ()
@@ -48,6 +49,8 @@ belongs. [Page 130 CL&R 2nd ed.]."
                   (return)))))
 
 (defun improve-key (heap i compare-fn set-index-fn)
+  "The item at i may be better than its parent. Promote the item until
+it is in the correct position."
   (declare (array heap) (fixnum i) (function compare-fn) (function set-index-fn))
   (let ((item (aref heap i)))
     (loop for index = i then parent-index
@@ -76,15 +79,60 @@ value iff the first argument should be prioritized higher in the
 queue. If the two items have equal priority, then compare-fn should
 return nil.
 
-set-index-fn is a function that takes two arguments: the first is an item
-in the queue and the second is the current index position of that item
-in the heap. This function should do something to record the
-association between the item and the index, so that the index can be
-used later with the queue mutating operations that require such an
-index.
+set-index-fn and get-index-fn are a pair. Some queue operations (e.g.,
+queue-delete) require that the index for an item can be
+retrieved. These functions allow the user to control how that mapping
+is maintained.
+
+set-index-fn is a function that takes two arguments: the first is an
+item in the queue and the second is the current index position of that
+item in the heap. This function should do something to record the
+association between the item and the index. Each item's index may
+change many times while it is stored in the queue; this function will
+be called each time.
 
 get-index-fn is a function that takes an item and returns the heap
-index that was associated with it via set-index-fn.
+index that was associated with it via set-index-fn. get-index-fn must
+return -1 if the item is not in the queue. The priority queue will
+call set-index-fn with -1 when an item is being removed from the
+queue, but that obviously only works for items it has seen before. If
+there is a chance client code will try to call one of the operations
+that relies on get-index-fn with items that have never been in the
+queue, you must make sure that get-index-fn returns -1. See example
+below.
+
+A trivial way to implement set-index-fn / get-index-fn would be like
+this:
+
+ (let ((hash (make-hash-table))
+       (set-index-fn (lambda (item index))
+                        (setf (gethash item hash) index))
+       (get-index-fn (lamda (item)
+                        (gethash item hash -1))))
+   (make-empty-queue #'< set-index-fn get-index-fn))
+
+Notice that get-index-fn returns -1 for items that aren't in the
+hash. It might also be a good idea to change set-index-fn to something
+like this:
+
+ (lambda (item index)
+    (if (= index -1)
+        (remhash item hash)
+        (setf (gethash item hash) index)))
+
+Of course, this code all depends on each item being distinguishable
+via 'eql, since that is the default test for a hash-table.
+
+The motivation for handling the index maintenance this way is that it
+is straightforward and flexible. Any item can be stored in the queue
+and the user has control over how they are identified and where this
+storage takes place. In many cases, it may make sense to store the
+index directly as a property of the item being stored. In other cases,
+we may want a looser mapping that only uses some attributes of the
+item being stored, so that we can lookup similar items (e.g., if we
+were using the priority queue in a search algorithm we could check to
+see if the queue already contains a node with the same state as a
+newly discovered node).
 "
   (make-q :compare-fn compare-fn
           :set-index-fn set-index-fn
@@ -134,7 +182,11 @@ function. Returns the queue. [Page 140 CL&R 2nd ed.]."
   "Replace old with new in the queue. This is analogous to deleting
 the old item and inserting the new one, but it is almost always more
 efficient (and never less efficient) because we can just fix up the
-heap from the position of the swapped item. Returns the queue. Signals
+heap from the position of the swapped item. Obviously, this only makes
+sense if you expect the two items to be located very close to each
+other in the queue (perhaps even in the same location, such as if the
+priority is the same, but you need to swap the item being stored
+because of other data it contains). Returns the queue. Signals
 item-not-found-error if the old item wasn't found."
   (let ((compare-fn (q-compare-fn q))
         (items (q-items q))
@@ -172,7 +224,8 @@ wasn't found."
 
 (defun queue-delete (q item)
   "Delete item from the queue. Returns the queue. Signals
-item-not-found-error if the item wasn't found."
+empty-queue-error if the queue is empty. Signals item-not-found-error
+if the item wasn't found."
   (when (queue-empty-p q)
     (error 'empty-queue-error))
   (let ((heap (q-items q))
@@ -198,6 +251,6 @@ item-not-found-error if the item wasn't found."
                 (if (and (> index 0)
                          (funcall compare-fn last (aref heap (parent index))))
                     (improve-key heap index compare-fn set-index-fn)
-                    (heapify heap index compare-fn set-index-fn))))))))
-  (funcall (q-set-index-fn q) item +not-in-queue+)
+                    (heapify heap index compare-fn set-index-fn)))))))
+    (funcall set-index-fn item +not-in-queue+))
   q)
