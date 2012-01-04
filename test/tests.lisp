@@ -13,7 +13,6 @@
                       (lambda (item) (gethash item hash -1)))))
 
 (defparameter *test-queue-size* 40)
-(defparameter *last-random-state* nil)
 
 (def-suite basic-suite :description "Basic suite.")
 

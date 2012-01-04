@@ -2,9 +2,10 @@
   :description "Test suite for pettomato-indexed-priority-queue."
   :author "Austin Haas <austin@pettomato.com>"
   :licence "MIT"
-  :version "0.1.0"
-  :serial t
+  :version "0.1.1"
   :depends-on (#:pettomato-indexed-priority-queue
                #:fiveam)
-  :components ((:file "test-package")
-               (:file "tests")))
+  :components ((:module "test"
+                :serial t
+                :components ((:file "package")
+                             (:file "tests")))))
