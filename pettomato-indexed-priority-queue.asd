@@ -3,6 +3,7 @@
   :author "Austin Haas <austin@pettomato.com>"
   :licence "MIT"
   :version "0.1.0"
-  :serial t
-  :components ((:file "package")
-               (:file "priority-queue")))
+  :components ((:module "src"
+                :serial t
+                :components ((:file "package")
+                             (:file "priority-queue")))))
