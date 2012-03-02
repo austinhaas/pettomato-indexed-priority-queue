@@ -5,6 +5,7 @@
    #:empty-queue-error
    #:item-not-found-error
    #:make-empty-queue
+   #:queue-size
    #:queue-empty-p
    #:queue-peek
    #:queue-pop

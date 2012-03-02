@@ -1,4 +1,10 @@
 * todo
+** add a version of the priority-queue that doesn't require set-index-fn/get-index-fn
+   - and thus doesn't allow replace/update/delete
+   - maybe just let those be optional and signal an error if
+     replace/update/delete is called
+** consider exporting a type for the queue
+   - e.g., to be used in slot definitions, check-type, etc.
 ** supply initial values
    - later we might want to allow adding several items at once; it
      might be more efficient to merge two heaps than insert each item
