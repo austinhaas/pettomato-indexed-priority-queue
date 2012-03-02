@@ -104,11 +104,11 @@ below.
 A trivial way to implement set-index-fn / get-index-fn would be like
 this:
 
- (let ((hash (make-hash-table))
-       (set-index-fn (lambda (item index))
-                        (setf (gethash item hash) index))
-       (get-index-fn (lamda (item)
-                        (gethash item hash -1))))
+ (let* ((hash (make-hash-table))
+        (set-index-fn (lambda (item index))
+                         (setf (gethash item hash) index))
+        (get-index-fn (lamda (item)
+                         (gethash item hash -1))))
    (make-empty-queue #'< set-index-fn get-index-fn))
 
 Notice that get-index-fn returns -1 for items that aren't in the
