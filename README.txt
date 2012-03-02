@@ -21,4 +21,4 @@ some of that code to match the 2nd edition of the book by Corman,
 Leiserson, Rivest, and Stein. Specifically, I updated the referenced
 page numbers in the docstrings and implemented the Heap-Increase-Key
 algorithm (called improve-key in my code), which was not in the first
-edition (and is very useful for the new operations we added).
+edition (and is very useful for the new operations I added).
