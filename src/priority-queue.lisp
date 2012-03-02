@@ -140,6 +140,7 @@ newly discovered node).
           :items (make-array size :fill-pointer 0 :adjustable t)))
 
 (defun queue-size (q)
+  "Returns the number of items currently in the queue."
   (length (q-items q)))
 
 (defun queue-empty-p (q)
