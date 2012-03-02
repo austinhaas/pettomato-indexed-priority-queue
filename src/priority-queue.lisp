@@ -139,6 +139,9 @@ newly discovered node).
           :get-index-fn get-index-fn
           :items (make-array size :fill-pointer 0 :adjustable t)))
 
+(defun queue-size (q)
+  (length (q-items q)))
+
 (defun queue-empty-p (q)
   "Are there no items in the queue?"
   (= (length (q-items q)) 0))
